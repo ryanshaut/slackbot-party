@@ -23,6 +23,7 @@ client = WebClient(token=slack_token)
 llm_app_url = 'https://chatapi.apps.shaut.us'
 
 state = {}
+    
 
 def reset_state(channel: str):
     state[channel] = {"session_id": str(uuid.uuid4()), "context": []}

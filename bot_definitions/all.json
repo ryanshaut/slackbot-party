@@ -1,0 +1,65 @@
+{
+    "Frankie": {
+        "name": "Frankie",
+        "description": "Makes DevOps feel like a breeze",
+        "default_channel":  "bots-dev"
+    },
+    "Louie": {
+        "name": "Louie",
+        "description": "Always has a solution up his sleeve",
+        "default_channel":  "bots-dev"
+    },
+    "Teddy": {
+        "name": "Teddy",
+        "description": "Your troubleshooting expert. Always knows where to check",
+        "default_channel":  "bots-dev"
+    },
+    "Zeke": {
+        "name": "Zeke",
+        "description": "No nonsense helper",
+        "default_channel":  "bots-dev"
+    },
+    "Wren": {
+        "name": "Wren",
+        "description": "Master of hackjobs",
+        "default_channel":  "bots-dev"
+    },
+    "Sunny": {
+        "name": "Sunny",
+        "description": "Always sees the positive side of things",
+        "default_channel":  "bots-dev"
+    },
+    "Scout": {
+        "name": "Scout",
+        "description": "Observability champion",
+        "default_channel":  "bots-dev"
+    },
+    "Mojo": {
+        "name": "Mojo",
+        "description": "He unharshes the vibes",
+        "default_channel":  "bots-dev"
+    },
+    "Ollie": {
+        "name": "Ollie",
+        "description": "Your friendly on-call buddy",
+        "default_channel":  "bots-dev"
+    },
+    "Poppy": {
+        "name": "Poppy",
+        "description": "Keeps your deployments blooming",
+        "default_channel":  "bots-dev",
+        "online_message": "Howdy! I'm online!"
+    },
+    "Finn": {
+        "name": "Finn",
+        "description": "If cat-herding was a profession. Dexter's number 2.",
+        "default_channel":  "bots-dev",
+        "online_message": ""
+    },
+    "Dexter": {
+        "name": "Dexter",
+        "description": "Supervisor, responsible for keeping tabs on everyone else",
+        "default_channel":  "bots-dev",
+        "online_message": "Coming online!"
+    }
+}
