@@ -1,6 +1,7 @@
 from slack_bolt.app.async_app import AsyncApp
 from slack_bolt.adapter.socket_mode.async_handler import AsyncSocketModeHandler
 import logging
+from logging.handlers import RotatingFileHandler
 import aiohttp
 import uuid
 from slack_sdk.errors import SlackApiError
@@ -30,7 +31,6 @@ class AsyncSlackBot():
     def should_process_event(event, bot):
         if bot.muted:
             return False
-        # return bot.name == 'Dexter'
         return True
 
 
@@ -45,31 +45,42 @@ class AsyncSlackBot():
         logger.setLevel(logging.INFO)
         ch = logging.StreamHandler()
         ch.setLevel(logging.INFO)
-        # add in a potential team name and channel and message user to the format
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(team)s - %(channel)s - %(user)s - %(levelname)s - %(message)s')
         ch.setFormatter(formatter)
         logger.addHandler(ch)
+
+        # add file logger to logs/{self.name}.log, rotate every 10mb and new file on every start
+        fh = RotatingFileHandler(f'logs/{self.name}.log', maxBytes=10*1024*1024, backupCount=5)   
+        fh.setLevel(logging.INFO)
+        fh.setFormatter(formatter)
+        logger.addHandler(fh)
+
         logger.addFilter(ContextFilter())
         return logger
     
 
+    def mute(self):
+        self.muted = True
+
+    def unmute(self):
+        self.muted = False
 
 
     def register_event_handlers(self):
         @self.app.event("message")
-        async def handle_message_events(body, logger):
-            pass # don't do anything with regular messages, yet.
-            if not AsyncSlackBot.should_process_event(body, self):
-                return
+        async def handle_message(body, logger):
             message = body['event']['text']
             channel = body['event']['channel']
             user = body['event']['user']
             team = body['team_id']
 
             extra = {'team': team, 'channel': channel, 'user': user}
-            self.mylogger = logging.LoggerAdapter(self.mylogger, extra)
+            adapter = logging.LoggerAdapter(self.mylogger, extra)
 
-            self.mylogger.info(f"Received message: {message}")
+            adapter.info(f"Received message: {message}")
+            if not AsyncSlackBot.should_process_event(body, self):
+                return
+
             if message.find('rollcall') != -1:
                 await self.send_message(channel, f"I'm here! (from <@{body['event']['user']}>)")
             elif message.find('reset') != -1:
@@ -79,18 +90,19 @@ class AsyncSlackBot():
                 await self.send_message(channel, f"What's up? (from <@{body['event']['user']}>)")
 
         @self.app.event("app_mention")
-        async def event_test(body, say, logger):
-            if not AsyncSlackBot.should_process_event(body, self):
-                return
+        async def handle_event(body, say, logger):
             message = body['event']['text']
             channel = body['event']['channel']
             user = body['event']['user']
             team = body['team_id']
 
             extra = {'team': team, 'channel': channel, 'user': user}
-            self.mylogger = logging.LoggerAdapter(self.mylogger, extra)
+            adapter = logging.LoggerAdapter(self.mylogger, extra)
 
-            self.mylogger.info(f"Received app_mention: {message}")
+            adapter.info(f"Received app_mention: {message}")
+
+            if not AsyncSlackBot.should_process_event(body, self):
+                return
 
             if message.find('rollcall') != -1:
                 await self.send_message(channel, f"I'm here! (from <@{body['event']['user']}>)")
@@ -99,9 +111,9 @@ class AsyncSlackBot():
                 await self.send_message(channel, f"State reset! (from <@{body['event']['user']}>)")
             else:
                 try:
-                    self.mylogger.info("calling LLM app")
+                    adapter.info("calling LLM app")
                     llm_res = await self.call_llm_app(message, channel)
-                    self.mylogger.info(f"Got response back from LLM app")
+                    adapter.info(f"Got response back from LLM app")
                     message = llm_res["response"]["content"]
                     await self.send_message(channel, message)
                 except Exception as e:
@@ -136,9 +148,9 @@ class AsyncSlackBot():
             team = body['team_id']
 
             extra = {'team': team, 'channel': channel, 'user': user}
-            self.mylogger = logging.LoggerAdapter(self.mylogger, extra)
+            logger = logging.LoggerAdapter(self.mylogger, extra)
 
-            self.mylogger.info(f"Received command /rollcall: {message}")
+            logger.info(f"Received command /rollcall: {message}")
 
             await self.send_message(body['channel_id'], f"I'm here! (from <@{body['user_id']}>)")
             await self.send_message(body['channel_id'], f"@channel, rollcall! (from <@{body['user_id']}>)")
@@ -167,6 +179,8 @@ class AsyncSlackBot():
                     response.raise_for_status()
 
     async def send_message(self, channel: str, message: str):
+        extra = {'team': "", 'channel': channel, 'user': self.name}
+        self.mylogger = logging.LoggerAdapter(self.mylogger, extra)
         try:
             if type(message) is not str:
                 message = str(message)
