@@ -1,8 +1,9 @@
-import os, json
+import json
 import asyncio
 import signal
 
-from bot import AsyncSlackBot
+from bots.asyncslackbot import AsyncSlackBot
+from bots.asyncwebhookconsumerbot import AsyncWebhookConsumerBot
 
 def load_json(filename):
     return json.load(open(filename))
@@ -26,12 +27,15 @@ async def main():
     dexter = AsyncSlackBot(options.get('Dexter'), secrets.get('Dexter'))
     poppy = AsyncSlackBot(options.get('Poppy'), secrets.get('Poppy'))
 
+    louie = AsyncWebhookConsumerBot(options.get('Louie'), secrets.get('Louie'))
+
     dexter.mute()
     poppy.mute()
 
     async with asyncio.TaskGroup() as tg:
         tg.create_task(dexter.start_async())
         tg.create_task(poppy.start_async())
+        tg.create_task(louie.start_async())
 
 
 # Graceful shutdown

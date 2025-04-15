@@ -7,25 +7,20 @@ import uuid
 from slack_sdk.errors import SlackApiError
 from slack_sdk import WebClient
 
-class ContextFilter(logging.Filter):
-    def filter(self, record):
-        record.team = getattr(record, 'team', 'unknown_team')
-        record.channel = getattr(record, 'channel', 'unknown_channel')
-        record.user = getattr(record, 'user', 'unknown_user')
-        return True
+from bot_utils import ContextFilter
 
 
-
-class AsyncSlackBot():
+class BaseBotAsync():
     def __init__(self, options, secrets):
         self._options = {**options, **secrets}
         self.__token = self._options["SLACK_BOT_TOKEN"]
         self.state = {}
         self.name = self._options["name"]
-        self.llm_app_url = 'https://chatapi.apps.shaut.us'
-        self.mylogger = self.create_logger()
+        self.logger = self.create_logger()
         self.__init()
         self.muted = False
+        self.llm_app_url = 'https://chatapi.apps.shaut.us'
+
 
     @staticmethod
     def should_process_event(event, bot):
@@ -75,7 +70,7 @@ class AsyncSlackBot():
             team = body['team_id']
 
             extra = {'team': team, 'channel': channel, 'user': user}
-            adapter = logging.LoggerAdapter(self.mylogger, extra)
+            adapter = logging.LoggerAdapter(self.logger, extra)
 
             adapter.info(f"Received message: {message}")
             if not AsyncSlackBot.should_process_event(body, self):
@@ -97,7 +92,7 @@ class AsyncSlackBot():
             team = body['team_id']
 
             extra = {'team': team, 'channel': channel, 'user': user}
-            adapter = logging.LoggerAdapter(self.mylogger, extra)
+            adapter = logging.LoggerAdapter(self.logger, extra)
 
             adapter.info(f"Received app_mention: {message}")
 
@@ -148,7 +143,7 @@ class AsyncSlackBot():
             team = body['team_id']
 
             extra = {'team': team, 'channel': channel, 'user': user}
-            logger = logging.LoggerAdapter(self.mylogger, extra)
+            logger = logging.LoggerAdapter(self.logger, extra)
 
             logger.info(f"Received command /rollcall: {message}")
 
@@ -180,11 +175,11 @@ class AsyncSlackBot():
 
     async def send_message(self, channel: str, message: str):
         extra = {'team': "", 'channel': channel, 'user': self.name}
-        self.mylogger = logging.LoggerAdapter(self.mylogger, extra)
+        self.logger = logging.LoggerAdapter(self.logger, extra)
         try:
             if type(message) is not str:
                 message = str(message)
-            self.mylogger.info(f" > {channel}: {message}")
+            self.logger.info(f" > {channel}: {message}")
             self.client.chat_postMessage(
                 channel=channel,
                 text=message
@@ -201,6 +196,6 @@ class AsyncSlackBot():
         
 
     async def start_async(self):
-        self.mylogger.info(self._options["online_message"])
+        self.logger.info(self._options["online_message"])
         await self.send_startup_message(self._options["default_channel"])
         await self.handler.start_async()

@@ -6,9 +6,14 @@
     },
     "Louie": {
         "name": "Louie",
-        "description": "Always has a solution up his sleeve",
+        "description": "First to hear about problems",
         "default_channel":  "bots-dev",
-        "bot_type": "send-only"
+        "online_message": "Coming online!",
+        "watch_all_messages": false,
+        "can_reply_to_all_messages": true,
+        "extras":{
+            "webhookUrl":"https://webhooks.apps.shaut.us/api/webhookevents/receive/0e7c03ca-6e35-4f49-9ca8-be9dfbb9bfec"          
+        }
     },
     "Teddy": {
         "name": "Teddy",
